@@ -7,14 +7,15 @@ import {
 } from "@/features/product/types/product.types";
 
 import { ProductFormValues } from "../../schema/product.schema";
-import { useState } from "react";
+import { useProductFormToggle } from "../../provider/ProductFormToggleContext";
 
 interface ProductDetailsProps {
   categories: ProductCategory[];
 }
 
 const ProductDetails = ({ categories }: ProductDetailsProps) => {
-  const { register, formState: { errors } } = useFormContext<ProductFormValues>();
+  const { register, setValue, formState: { errors } } = useFormContext<ProductFormValues>();
+  const { action } = useProductFormToggle();
   const slugify = (text: string) => {
     return text
       .toLowerCase()
@@ -22,8 +23,6 @@ const ProductDetails = ({ categories }: ProductDetailsProps) => {
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-+|-+$/g, "");
   }
-  const productName = register("name").name || "";
-  const [slug, setSlug] = useState(slugify(productName));
 
   return (
     <>
@@ -39,9 +38,7 @@ const ProductDetails = ({ categories }: ProductDetailsProps) => {
         error={errors.name?.message}
         {...register("name", {
           onChange: (e) => {
-            const newSlug = slugify(e.target.value);
-            setSlug(newSlug);
-            console.log(slug)
+            if (action === "add") setValue("slug", slugify(e.target.value), { shouldValidate: true });
           },
         })}
       />
@@ -50,16 +47,10 @@ const ProductDetails = ({ categories }: ProductDetailsProps) => {
         <Input
           type="text"
           label="Slug *"
-          value={slug}
           placeholder="luxury-tote-bag"
           className="min-w-70"
           error={errors.slug?.message}
-          {...register("slug", {
-            onChange: (e) => {
-              const newSlug = slugify(e.target.value);
-              setSlug(newSlug);
-            },
-          })}
+          {...register("slug")}
         />
 
         <Input

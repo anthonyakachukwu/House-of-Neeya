@@ -11,37 +11,27 @@ import ProductVariants from './ProductVariants';
 import ProductTags from './ProductTags';
 import { ProductFormValues, productSchema } from "../../schema/product.schema";
 import { PRODUCT_CATEGORIES, PRODUCT_TAGS } from "../../constants/product.constants";
-import { createProduct, getProduct } from "@/features/product/api/product.services";
+import { createProduct, getProduct, updateProduct } from "@/features/product/api/product.services";
 import { useEffect, useState } from "react";
 import { mapProductFromDatabase } from "@/features/product/api/product.mappers";
 
+const emptyValues: ProductFormValues = {
+  name: "", slug: "", description: "", category: "Clothing", brand: "",
+  price: 0, discountedPrice: undefined, stock: 0, sku: "",
+  image: { id: "", src: "", alt: "" },
+  variants: [], tags: [], isFeatured: false, isNewArrival: false,
+};
+
 const ProductForm = () => {
-  const { action, CloseProductForm } = useProductFormToggle();
+  const { action, productId, isOpen, CloseProductForm } = useProductFormToggle();
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema),
-    defaultValues: {
-      name: "",
-      slug: "",
-      description: "",
-      category: "Clothing",
-      brand: "",
-      price: 0,
-      discountedPrice: undefined,
-      stock: 0,
-      sku: "",
-      image: {
-        id: "",
-        src: "",
-        alt: "",
-      },
-      variants: [],
-      tags: [],
-      isFeatured: false,
-      isNewArrival: false,
-    },
+    defaultValues: emptyValues,
   });
 
+  const { reset } = form;
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loadError, setLoadError] = useState("");
 
   const onInvalid = (errors: FieldErrors<ProductFormValues>) => {
     console.log("FORM ERRORS:", errors);
@@ -50,57 +40,48 @@ const ProductForm = () => {
   const onSubmit = async (data: ProductFormValues) => {
     try {
       setIsSubmitting(true);
-
-      const product = await createProduct(data);
-
-      console.log("Product created:", product);
-
-      form.reset();
-
+      if (action === "edit" && productId) {
+        await updateProduct(productId, data);
+      } else {
+        await createProduct(data);
+      }
+      CloseProductForm();
     } catch (error) {
-      console.error("Failed to create product:", error);
-
+      console.error("Failed to save product:", error);
     } finally {
       setIsSubmitting(false);
-      CloseProductForm();
     }
   };
 
   useEffect(() => {
-    async function fetchProduct() {
-      if (action === "edit") {
-        try {
-          const productId = "some-product-id"; // Replace with actual product ID
-          const data = await getProduct(productId);
-          console.log("Fetched product data:", data);
-          const mappedProduct = mapProductFromDatabase(data[0]);
+    if (!isOpen) return;
 
-          if (mappedProduct) {
-            form.reset({
-              name: mappedProduct.name,
-              slug: mappedProduct.slug,
-              description: mappedProduct.description,
-              category: mappedProduct.category,
-              brand: mappedProduct.brand,
-              price: mappedProduct.price,
-              discountedPrice: mappedProduct.discountedPrice,
-              stock: mappedProduct.stock,
-              sku: mappedProduct.sku,
-              image: mappedProduct.image,
-              variants: mappedProduct.variants,
-              tags: mappedProduct.tags,
-              isFeatured: mappedProduct.isFeatured,
-              isNewArrival: mappedProduct.isNewArrival,
-            });
-          }
-        } catch (error) {
-          console.error("Failed to fetch product:", error);
-        }
-      }
+    if (action === "add") {
+      reset(emptyValues);
+      return;
     }
+    if (!productId) return;
 
-    fetchProduct();
-  }, [action, form]);
+    let cancelled = false;
+    (async () => {
+      try {
+        const row = await getProduct(productId);
+        if (cancelled) return;
+        const p = mapProductFromDatabase(row);
+        reset({
+          name: p.name, slug: p.slug, description: p.description,
+          category: p.category, brand: p.brand, price: p.price,
+          discountedPrice: p.discountedPrice, stock: p.stock, sku: p.sku,
+          image: p.image, variants: p.variants, tags: p.tags,
+          isFeatured: p.isFeatured, isNewArrival: p.isNewArrival,
+        });
+      } catch (e) {
+        if (!cancelled) setLoadError(e instanceof Error ? e.message : "Failed to load product");
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, [action, productId, isOpen, reset]);
 
   return (
     <FormProvider {...form}>

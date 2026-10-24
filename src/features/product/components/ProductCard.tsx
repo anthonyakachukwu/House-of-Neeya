@@ -217,7 +217,7 @@ function ProductCategory({ children, className }: ProductCategoryProps) {
 function ProductName({ children, className }: ProductNameProps) {
   return (
     <div
-      className={`text-sm md:text-base lg:text-lg font-serif font-bold text-foreground line-clamp-1 cursor-pointer hover:underline w-fit ${className}`}
+      className={`text-sm md:text-base lg:text-lg font-serif font-bold text-foreground line-clamp-1 w-fit ${className}`}
     >
       {children}
     </div>

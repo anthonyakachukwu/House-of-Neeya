@@ -6,13 +6,15 @@ export type FormAction = "add" | "edit";
 
 type ProductFormContextType = {
   action: FormAction;
-  OpenProductForm: (form: FormAction) => void;
+  productId: string | null;
+  OpenProductForm: (form: FormAction, productId?: string) => void;
   CloseProductForm: () => void;
   isOpen: boolean;
 };
 
 const ProductFormContext = createContext<ProductFormContextType>({
   action: "add",
+  productId: null,
   OpenProductForm: () => {},
   CloseProductForm: () => {},
   isOpen: false,
@@ -20,9 +22,11 @@ const ProductFormContext = createContext<ProductFormContextType>({
 
 export const ProductFormProvider = ({ children }: { children: ReactNode }) => {
   const [action, setAction] = useState<FormAction>("add");
+  const [productId, setProductId] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState<boolean>(false);
-  const OpenProductForm = (form: FormAction) => {
+  const OpenProductForm = (form: FormAction, id?: string) => {
     setAction(form);
+    setProductId(form === "edit" ? (id ?? null) : null);
     setIsOpen(true);
   };
   const CloseProductForm = () => setIsOpen(false);
@@ -32,6 +36,7 @@ export const ProductFormProvider = ({ children }: { children: ReactNode }) => {
     {
       value: {
         action,
+        productId,
         OpenProductForm,
         CloseProductForm,
         isOpen,

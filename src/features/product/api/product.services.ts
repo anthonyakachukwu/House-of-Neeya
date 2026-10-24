@@ -1,6 +1,4 @@
 import { supabase } from "@/utils/supabase/client";
-// import { products } from "../data/products";
-import { ProductDraft } from "@/features/admin/products/types/product.types";
 import { ProductFormValues } from "@/features/admin/products/schema/product.schema";
 import { mapProductFormToDatabase } from "./product.mappers";
 
@@ -11,23 +9,17 @@ export async function getProducts() {
     throw new Error(error.message);
   }
 
-  console.log(data);
-
-  return { data, error };
+  return { products: data ?? [], error: null };
 }
 
 export async function getProduct(id: string) {
   const { data, error } = await supabase()
     .from("Products")
     .select("*")
-    .eq("id", id);
+    .eq("id", id)
+    .single();
 
-  if (error) {
-    throw Error(error.message);
-  }
-
-  console.log(data);
-
+  if (error) throw new Error(error.message);
   return data;
 }
 
@@ -47,18 +39,15 @@ export async function createProduct(data: ProductFormValues) {
     return createdProduct;
 }
 
-export async function updateProduct(id: string, product: ProductDraft) {
+export async function updateProduct(id: string, values: ProductFormValues) {
   const { data, error } = await supabase()
-    .from("products")
-    .update(product)
+    .from("Products")
+    .update(mapProductFormToDatabase(values))
     .eq("id", id)
     .select()
     .single();
 
-  if (error) {
-    throw new Error(error.message);
-  }
-
+  if (error) throw new Error(error.message);
   return data;
 }
 

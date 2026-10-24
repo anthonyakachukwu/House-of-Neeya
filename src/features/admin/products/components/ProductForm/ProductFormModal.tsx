@@ -41,10 +41,10 @@ const ProductFormModal = (({ children, className }: ProductFormModalType) => {
     )
 }) as ProductFormModalComponent;
 
-function OpenForm({ children, action }: { children?: ReactNode, action: FormAction }) {
+function OpenForm({ children, action, productId }: { children?: ReactNode, action: FormAction, productId?: string }) {
     const { OpenProductForm } = useProductFormToggle();
     return (
-        <div className="cursor-pointer" onClick={() => OpenProductForm(action)}>
+        <div className="cursor-pointer" onClick={() => OpenProductForm(action, productId)}>
             {children}
             {action === "add" && <Button className="w-fit"><Plus />Add Product</Button>}
         </div>

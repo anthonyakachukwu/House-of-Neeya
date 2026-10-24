@@ -10,7 +10,7 @@ import {
   type DailyOrders,
 } from "@/features/admin/dashboard/api/dashboard.services";
 
-const REFRESH = { staleTime: 30_000, refetchInterval: 60_000 } as const;
+export const REFRESH = { staleTime: 30_000, refetchInterval: 60_000 } as const;
 
 export const dashboardKeys = {
   dailyOrders: ["admin", "dashboard", "daily-orders"] as const,

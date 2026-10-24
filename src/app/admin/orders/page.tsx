@@ -32,8 +32,8 @@ export default function Page() {
       try {
         setLoading(true);
 
-        const { data, error } = await getProducts();
-        const mappedProducts = data.map(mapProductFromDatabase);
+        const { products, error } = await getProducts();
+        const mappedProducts = products.map(mapProductFromDatabase);
 
         if (error) {
           throw new Error(error)

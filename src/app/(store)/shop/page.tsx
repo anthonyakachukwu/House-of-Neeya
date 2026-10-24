@@ -5,20 +5,28 @@ import SectionLayout from "@/components/layout/SectionLayout";
 import PageNavigator from "@/components/ui/PageNavigator";
 import { useCartStore } from "@/features/cart/store/cartStore";
 import { useWishlistStore } from "@/features/wishlist/store/wishlistStore";
-import { getProducts } from "@/features/product/api/product.services";
 import ProductCard from "@/features/product/components/ProductCard";
 import ProductCardLoader from "@/features/product/components/ProductCardLoader";
 import ProductGrid from "@/features/product/components/ProductGrid";
 import ProductFilter from "@/features/product/components/ProductFilter";
-import { Product } from "@/features/product/types/product.types";
 import { FilterIcon, FilterXIcon, Heart } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
+import { useProducts } from "@/features/product/hooks/useProducts";
+import {
+  DEFAULT_FILTERS,
+  filterProducts,
+  type ProductFilters,
+} from "@/features/product/lib/productFilters";
+import {
+  SORT_OPTIONS,
+  sortProducts,
+  type SortOption,
+} from "@/features/product/lib/productSort";
 import Select from "@/components/ui/SelectInput";
 import {
   FilterToggleProvider,
   useFilterToggle,
 } from "@/features/product/provider/filterMenuToggleContext";
-import { mapProductFromDatabase } from "@/features/product/api/product.mappers";
 import ErrorState from "@/components/ui/ErrorState";
 
 export default function Home() {
@@ -31,42 +39,54 @@ export default function Home() {
 
 function Shop() {
   const { isOpen, toggleFilter } = useFilterToggle();
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string>("");
-  const [pageNumber, setPageNumber] = useState<number>(1)
-  const productsPerPage = 12;
-  const startIndex = (pageNumber - 1) * productsPerPage;
-  const endIndex = startIndex + productsPerPage;
-  const paginatedProducts = products.slice(startIndex, endIndex);
-  const totalPages = Math.ceil(products.length / productsPerPage);
-
-  const { addToCart } = useCartStore();
+  const { data: products = [], isLoading: loading, error } = useProducts();
   const { isInWishlist, toggleWishlist } = useWishlistStore();
+  const { addToCart } = useCartStore();
+  const [filters, setFilters] = useState<ProductFilters>(DEFAULT_FILTERS);
+  const [sort, setSort] = useState<SortOption>("featured");
+  const [pageNumber, setPageNumber] = useState<number>(1);
+  const productsPerPage = 12;
 
-  useEffect(() => {
-    async function loadProducts() {
-      try {
-        setLoading(true);
+  const filteredProducts = useMemo(
+    () => filterProducts(products, filters),
+    [products, filters],
+  );
 
-        const { data, error } = await getProducts();
-        const mappedProducts = data.map(mapProductFromDatabase);
+  const priceCeiling = useMemo(() => {
+    const highest = Math.max(0, ...products.map((p) => p.price));
+    return Math.max(1000, Math.ceil(highest / 1000) * 1000);
+  }, [products]);
 
-        if (error) {
-          throw new Error(error)
-        }
+  const handleFiltersChange = (next: ProductFilters) => {
+    setFilters(next);
+    setPageNumber(1); // otherwise you can land on an empty page 3
+  };
 
-        setProducts(mappedProducts);
-      } catch (error) {
-        console.error("Failed to load products:", error);
-        setError(error instanceof Error ? error.message : String(error));
-      } finally {
-        setLoading(false);
-      }
-    }
+  const sortedProducts = useMemo(
+    () => sortProducts(filteredProducts, sort),
+    [filteredProducts, sort],
+  );
 
-    loadProducts();
-  }, []);
+  const startIndex = (pageNumber - 1) * productsPerPage;
+  const paginatedProducts = sortedProducts.slice(startIndex, startIndex + productsPerPage);
+  const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
+
+  const sortSelect = (
+    <Select
+      className="text-xs"
+      value={sort}
+      onChange={(e) => {
+        setSort(e.target.value as SortOption);
+        setPageNumber(1);
+      }}
+    >
+      {SORT_OPTIONS.map((option) => (
+        <option key={option.value} value={option.value}>
+          {option.label}
+        </option>
+      ))}
+    </Select>
+  );
 
   return (
     <>
@@ -79,7 +99,14 @@ function Shop() {
         </div>
       </SectionLayout>
       <SectionLayout className="flex flex-col md:flex-row gap-8 py-0!">
-        {isOpen && <ProductFilter isOpen={isOpen} />}
+        {isOpen && (
+          <ProductFilter
+            isOpen={isOpen}
+            filters={filters}
+            onChange={handleFiltersChange}
+            priceCeiling={priceCeiling}
+          />
+        )}
         {loading ? (
           <div className="flex flex-col w-full @container">
             <div className="flex flex-col md:flex-row w-full md:items-center md:justify-between gap-4 my-4 py-2 text-xs text-foreground/60">
@@ -99,38 +126,15 @@ function Shop() {
                     onClick={toggleFilter}
                   />
                 )}{" "}
-                Showing {products.length} products
+                Loading....
               </div>
-              <Select className="text-xs">
-                <option value="featured" className="text-xs w-12">
-                  Sort by: Featured
-                </option>
-                <option value="featured" className="text-xs w-12">
-                  Sort by: Price (Low to High)
-                </option>
-                <option value="featured" className="text-xs w-12">
-                  Sort by: Price (High to Low)
-                </option>
-                <option value="featured" className="text-xs w-12">
-                  Sort by: Name (A- Z)
-                </option>
-              </Select>
+              {sortSelect}
             </div>
             <ProductGrid>
               {[...Array(12)].map((_, index) => {
                 return <ProductCardLoader key={index} />;
               })}
             </ProductGrid>
-            <PageNavigator
-              onPageClick={(number) =>
-                setPageNumber(number)
-              }
-              onNextPage={() => setPageNumber((prev) => prev + 1)}
-              onPrevPage={() => setPageNumber((prev) => prev - 1)}
-              currentPage={pageNumber}
-              totalPages={3}
-              className="py-6"
-            />
           </div>
         ) : (
           <div className="flex flex-col w-full @container">
@@ -153,25 +157,14 @@ function Shop() {
                 )}{" "}
                 Showing {products.length} products
               </div>
-              <Select className="text-xs">
-                <option value="featured" className="text-xs w-12">
-                  Sort by: Featured
-                </option>
-                <option value="featured" className="text-xs w-12">
-                  Sort by: Price (Low to High)
-                </option>
-                <option value="featured" className="text-xs w-12">
-                  Sort by: Price (High to Low)
-                </option>
-                <option value="featured" className="text-xs w-12">
-                  Sort by: Name (A- Z)
-                </option>
-              </Select>
+              {sortSelect}
             </div>
-            {
-              error &&
-              <ErrorState error={error} />
-            }
+            {error && <ErrorState error={error.message} />}
+            {!error && filteredProducts.length === 0 && (
+              <p className="py-12 text-center text-sm text-foreground/60">
+                No products match these filters.
+              </p>
+            )}
             <ProductGrid>
               {paginatedProducts.map((product) => {
                 const inWishlist = isInWishlist(product.id);
@@ -234,6 +227,7 @@ function Shop() {
                             </ProductCard.Description>
                             <Button
                               variant="secondary"
+                              disabled={!!product.variants?.length && !selectedOption.color && !selectedOption.size || product.stock===0}
                               onClick={() =>
                                 addToCart({
                                   ...product,
@@ -243,7 +237,7 @@ function Shop() {
                                 })
                               }
                             >
-                              Add to Cart
+                              {product.stock===0 ? "Sold Out" : !!product.variants?.length && !selectedOption.color && !selectedOption.size ? "Select an Option" : "Add to Cart"}
                             </Button>
                           </ProductCard.Content>
                         </>

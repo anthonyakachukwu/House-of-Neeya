@@ -11,14 +11,14 @@ import AdminPageContent from "@/features/admin/components/AdminPageContent";
 import AdminPageHeader from "@/features/admin/components/AdminPageHeader";
 import AdminTable from "@/features/admin/components/AdminTable";
 import AdminTableTabs, { Tab } from "@/features/admin/components/AdminTableTabs";
+import { REFRESH } from "@/features/admin/dashboard/hooks/useDashboardStats";
 import ProductForm from "@/features/admin/products/components/ProductForm/ProductForm";
 import ProductFormModal from "@/features/admin/products/components/ProductForm/ProductFormModal";
-import { mapProductFromDatabase } from "@/features/product/api/product.mappers";
 import { getProducts } from "@/features/product/api/product.services";
-import { Product } from "@/features/product/types/product.types";
 import formatCurrency from "@/lib/formatCurrency";
+import { useQuery } from "@tanstack/react-query";
 import { MoreHorizontal, Search } from "lucide-react";
-import { useEffect, useState } from "react";
+import Image from "next/image";
 
 const rowHeaders = [<Checkbox label="" key={1} />, "product", "category", "price", "stock", "badge", "status", ""]
 // const products = [
@@ -74,33 +74,11 @@ const rowHeaders = [<Checkbox label="" key={1} />, "product", "category", "price
 const tableTabs = ["All Products", "Published", "Drafts", "Archived"]
 
 export default function Page() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string>("");
-
-  useEffect(() => {
-    async function loadProducts() {
-      try {
-        setLoading(true);
-
-        const { data, error } = await getProducts();
-        const mappedProducts = data.map(mapProductFromDatabase);
-
-        if (error) {
-          throw new Error(error)
-        }
-
-        setProducts(mappedProducts);
-      } catch (error) {
-        console.error("Failed to load products:", error);
-        setError(error instanceof Error ? error.message : String(error));
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadProducts()
-  }, [])
+  const {data, isLoading, error} = useQuery({
+    queryKey: ["admin", "products"],
+    queryFn: getProducts,
+    ...REFRESH,
+  })
 
   return (
     <>
@@ -155,22 +133,40 @@ export default function Page() {
         <div className="min-h-screen flex-1 rounded-xl bg-foreground/5 md:min-h-min">
           {
             error &&
-            <ErrorState error={error} />
+            <ErrorState error={error.message} />
           }
           {
-            loading && <Loader />
+            isLoading && <Loader />
           }
           {
-            !loading && !error && <AdminTable rowHeaders={rowHeaders}>
+            !isLoading && !error && <AdminTable rowHeaders={rowHeaders}>
               {
-                products.map((product, index) => (
+                data?.products.map((product, index) => (
                   <TableRow key={index}>
                     <TableCell><Checkbox label="" /></TableCell>
-                    <TableCell>{product.name}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        <div className="aspect-8/10">
+                          <Image src={product.image.src} alt={product.name} width={40} height={50} />
+                        </div>
+                        <div className="flex flex-col flex-3">
+                          <span className="font-semibold">{product.name}</span>
+                          <span className="text-foreground/60 text-[10px]">SKU: {product.sku}</span>
+                        </div>
+                      </div>
+                    </TableCell>
                     <TableCell>{product.category}</TableCell>
                     <TableCell>{formatCurrency(product.price)}</TableCell>
                     <TableCell>{product.stock}</TableCell>
-                    <TableCell><span className="bg-orange-100 text-orange-800 px-2 py-1 rounded-full text-xs">{product.tags}</span></TableCell>
+                    <TableCell>
+                      {
+                        product.tags?.map((tag: string, index: number) => (
+                          <span key={index} className="bg-orange-100 text-orange-800 px-2 py-1 ml-1 rounded-full text-xs">
+                            {tag}
+                          </span>
+                        ))
+                      }
+                    </TableCell>
                     <TableCell><span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">Published</span></TableCell>
                     <TableCell>
                       <DropdownMenu>
@@ -179,7 +175,7 @@ export default function Page() {
                           <DropdownMenuGroup>
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
                             <DropdownMenuSeparator />
-                            <ProductFormModal.Open action="edit"><DropdownMenuItem>Edit</DropdownMenuItem></ProductFormModal.Open>
+                            <ProductFormModal.Open action="edit" productId={product.id}><DropdownMenuItem>Edit</DropdownMenuItem></ProductFormModal.Open>
                             <DropdownMenuItem>Publish</DropdownMenuItem>
                             <DropdownMenuItem>Delete</DropdownMenuItem>
                           </DropdownMenuGroup>
