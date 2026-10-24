@@ -116,14 +116,14 @@ const CheckoutForm = ({
           paymentOptions="Cards, Bank Transfer, USSD"
           brandStyle="text-forground"
         >
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1C1916" stroke-width="1.6"><path d="M4 12l6-8h10l-6 8h6l-12 12 2-8H4z"></path></svg>
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1C1916" strokeWidth="1.6"><path d="M4 12l6-8h10l-6 8h6l-12 12 2-8H4z"></path></svg>
           Flutterwave
         </PaymentMethod>
         <PaymentMethod
           paymentOptions="Cards, Bank Transfer, QR"
           brandStyle="text-foreground"
         >
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1C1916" stroke-width="1.6"><path d="M6 4h9a4 4 0 010 8H9l-1 8H5L7 4z"></path><path d="M9 12h8a4 4 0 010 8h-6"></path></svg>
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1C1916" strokeWidth="1.6"><path d="M6 4h9a4 4 0 010 8H9l-1 8H5L7 4z"></path><path d="M9 12h8a4 4 0 010 8h-6"></path></svg>
           Paypal
         </PaymentMethod>
       </div>

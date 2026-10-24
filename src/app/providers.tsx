@@ -1,5 +1,6 @@
 "use client";
 
+import StoreSync from "@/providers/storeSync";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { useState } from "react";
@@ -22,6 +23,7 @@ export default function Providers({
 
   return (
     <QueryClientProvider client={queryClient}>
+      <StoreSync />
       {children}
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
