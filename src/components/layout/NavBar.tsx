@@ -217,7 +217,7 @@ const NavBar = () => {
                       </DropdownMenuItem>
                     </DropdownMenuGroup>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem render={<Link href="/signout" />}>
+                    <DropdownMenuItem render={<Link href="/signup" />}>
                       <LogOutIcon
                       />
                       Log out
