@@ -41,11 +41,11 @@ export type NeedsAttentionCounts = { pending: number; unfulfilled: number };
 export async function fetchNeedsAttention(): Promise<NeedsAttentionCounts> {
   const [pending, unfulfilled] = await Promise.all([
     supabase()
-      .from("orders")
+      .from("Orders")
       .select("id", { count: "exact", head: true })
       .eq("paymentStatus", PAYMENT_STATUS.pending),
     supabase()
-      .from("orders")
+      .from("Orders")
       .select("id", { count: "exact", head: true })
       .eq("paymentStatus", PAYMENT_STATUS.paid)
       .eq("status", ORDER_STATUS.unfulfilled),
@@ -60,7 +60,7 @@ export async function fetchNeedsAttention(): Promise<NeedsAttentionCounts> {
 export async function fetchLowStockCount(): Promise<number> {
 
   const { count, error } = await supabase()
-    .from("products")
+    .from("Products")
     .select("id", { count: "exact", head: true })
     .lte("stock", LOW_STOCK_THRESHOLD);
 
