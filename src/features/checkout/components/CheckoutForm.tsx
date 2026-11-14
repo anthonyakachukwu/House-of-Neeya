@@ -1,88 +1,113 @@
 "use client";
 
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components";
 import Input from "@/components/ui/Input";
 import Select from "@/components/ui/SelectInput";
-import { ReactNode, ChangeEvent } from "react";
 import formatCurrency from "@/lib/formatCurrency";
+import {
+  DELIVERY_FEES,
+  DELIVERY_STATE_NAMES,
+} from "../lib/checkout.constants";
+import {
+  checkoutFormSchema,
+  type CheckoutFormValues,
+} from "../schema/checkout.schema";
 
-const PaymentMethod = ({
-  children,
-  paymentOptions,
-  brandStyle,
-}: {
-  children: ReactNode;
-  paymentOptions: string;
-  brandStyle?: string;
-}) => {
-  return (
-    <div className="flex flex-col gap-4 items-center border border-foreground/20 p-4 bg-white">
-      <p className={`flex flex-col items-center gap-2 text-lg capitalize ${brandStyle}`}>
-        {children}
-      </p>
-      <p className="text-xs text-foreground/60">{paymentOptions}</p>
-    </div>
-  );
+type CheckoutFormProps = {
+  onStateChange: (state: string, fee: number) => void;
+  onSubmit: (values: CheckoutFormValues) => Promise<void> | void;
+  submitting: boolean;
+  disabled?: boolean;
+  error?: string;
 };
 
+const SectionTitle = ({ children }: { children: React.ReactNode }) => (
+  <h2 className="uppercase text-[11px] text-primary pb-2 tracking-[0.22em] border-b border-b-foreground/20">
+    {children}
+  </h2>
+);
+
 const CheckoutForm = ({
-  onClick,
-}: {
-  onClick: (state: string, fee: number) => void;
-}) => {
-  const deliveryFees = {
-    Abuja: 2000,
-    Nasarawa: 3000,
-    Lagos: 3000,
-    Kano: 3500,
-    Rivers: 4000,
-    Edo: 3000,
-    Oyo: 3000,
-    Delta: 3000,
-    Anambra: 3500,
-    Others: 3500,
-  };
+  onStateChange,
+  onSubmit,
+  submitting,
+  disabled,
+  error,
+}: CheckoutFormProps) => {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<CheckoutFormValues>({
+    resolver: zodResolver(checkoutFormSchema),
+  });
+
+  const stateField = register("state", {
+    onChange: (e) => {
+      const state = e.target.value as keyof typeof DELIVERY_FEES;
+      onStateChange(state, DELIVERY_FEES[state] ?? 0);
+    },
+  });
 
   return (
-    <form className="flex flex-col flex-5 gap-6">
+    <form
+      className="flex flex-col flex-5 gap-6"
+      onSubmit={handleSubmit(onSubmit)}
+      noValidate
+    >
       <h1 className="text-4xl font-serif">Complete Your Order</h1>
-      <h2 className="uppercase text-[11px] text-primary pb-2 tracking-[0.22em] border-b border-b-foreground/20">
-        Contact Information
-      </h2>
+
+      <SectionTitle>Contact Information</SectionTitle>
       <div className="flex flex-col md:flex-row justify-between gap-4">
         <Input
           type="text"
           label="First Name *"
           placeholder="James"
+          autoComplete="given-name"
           className="min-w-70"
+          error={errors.firstName?.message}
+          {...register("firstName")}
         />
         <Input
           type="text"
           label="Last Name *"
           placeholder="Nasiru"
+          autoComplete="family-name"
           className="min-w-70"
+          error={errors.lastName?.message}
+          {...register("lastName")}
         />
       </div>
       <Input
         type="email"
         label="Email *"
         placeholder="johnnasiru@mail.com"
+        autoComplete="email"
         className="min-w-70"
+        error={errors.email?.message}
+        {...register("email")}
       />
       <Input
         type="tel"
         label="Phone Number *"
         placeholder="+234 800 000 0000"
+        autoComplete="tel"
         className="min-w-70"
+        error={errors.phone?.message}
+        {...register("phone")}
       />
-      <h2 className="uppercase text-[11px] text-primary pb-2 tracking-[0.22em] border-b border-b-foreground/20">
-        Delivery Address
-      </h2>
+
+      <SectionTitle>Delivery Address</SectionTitle>
       <Input
         type="text"
-        label="Street Address"
+        label="Street Address *"
         placeholder="12 Allen Avenue, Maitama"
+        autoComplete="street-address"
         className="min-w-70"
+        error={errors.street?.message}
+        {...register("street")}
       />
       <div className="flex flex-col md:flex-row justify-between gap-4">
         <Input
@@ -90,47 +115,38 @@ const CheckoutForm = ({
           label="City *"
           placeholder="Abuja"
           className="min-w-70"
+          error={errors.city?.message}
+          {...register("city")}
         />
-        <Select
-          label="State"
-          onChange={(e: ChangeEvent<HTMLSelectElement>) => {
-            const state = e.target.value;
-            if (!state) return;
-            const fee = deliveryFees[state as keyof typeof deliveryFees];
-            onClick(state, fee);
-          }}
-        >
+        <Select label="State *" error={errors.state?.message} {...stateField}>
           <option value="">Select state</option>
-          {Object.entries(deliveryFees).map(([state, fee]) => (
+          {DELIVERY_STATE_NAMES.map((state) => (
             <option key={state} value={state}>
-              {state} - {formatCurrency(fee)}
+              {state} - {formatCurrency(DELIVERY_FEES[state])}
             </option>
           ))}
         </Select>
       </div>
-      <h2 className="uppercase text-[11px] text-primary pb-2 tracking-[0.22em] border-b border-b-foreground/20">
-        Payment Method
-      </h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <PaymentMethod
-          paymentOptions="Cards, Bank Transfer, USSD"
-          brandStyle="text-forground"
-        >
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1C1916" strokeWidth="1.6"><path d="M4 12l6-8h10l-6 8h6l-12 12 2-8H4z"></path></svg>
-          Flutterwave
-        </PaymentMethod>
-        <PaymentMethod
-          paymentOptions="Cards, Bank Transfer, QR"
-          brandStyle="text-foreground"
-        >
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1C1916" strokeWidth="1.6"><path d="M6 4h9a4 4 0 010 8H9l-1 8H5L7 4z"></path><path d="M9 12h8a4 4 0 010 8h-6"></path></svg>
-          Paypal
-        </PaymentMethod>
+
+      <SectionTitle>Payment</SectionTitle>
+      <div className="flex flex-col gap-2 border border-foreground/20 p-4 bg-white text-sm">
+        <p className="font-semibold">Bank transfer</p>
+        <p className="text-xs text-foreground/60">
+          Place your order, then transfer the total to our account and send
+          your proof of payment on WhatsApp. We start processing your order
+          once we confirm the payment.
+        </p>
       </div>
-      <p className="text-[10px] md:text-xs text-foreground/60">
-        🔒 Payments are securely processed. We never store card details.
-      </p>
-      <Button>Place Order & Pay</Button>
+
+      {error && (
+        <p role="alert" className="text-sm text-destructive">
+          {error}
+        </p>
+      )}
+
+      <Button type="submit" disabled={submitting || disabled}>
+        {submitting ? "Placing order..." : "Place Order"}
+      </Button>
     </form>
   );
 };
