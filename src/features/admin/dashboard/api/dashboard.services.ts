@@ -1,9 +1,13 @@
 import { getDayRangesWAT } from "@/features/admin/dashboard/lib/dayRanges";
 import { supabase } from "@/utils/supabase/client";
 
-// Assumed values. Confirm against what your checkout and order flow actually write.
 export const PAYMENT_STATUS = { pending: "pending", paid: "paid" } as const;
-export const ORDER_STATUS = { unfulfilled: "unfulfilled" } as const;
+export const ORDER_STATUS = {
+  unfulfilled: "unfulfilled",
+  shipped: "shipped",
+  delivered: "delivered",
+  cancelled: "cancelled",
+} as const;
 export const LOW_STOCK_THRESHOLD = 5;
 
 export type DailyOrderRow = {
@@ -58,7 +62,6 @@ export async function fetchNeedsAttention(): Promise<NeedsAttentionCounts> {
 }
 
 export async function fetchLowStockCount(): Promise<number> {
-
   const { count, error } = await supabase()
     .from("Products")
     .select("id", { count: "exact", head: true })

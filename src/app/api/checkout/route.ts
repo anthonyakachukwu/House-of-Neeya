@@ -118,6 +118,7 @@ async function handleCheckout(request: NextRequest) {
     console.error("checkout: address insert failed", addressError);
     return fail("Could not place your order. Please try again.", 500, {
       code: "ADDRESS_INSERT_FAILED",
+      databaseCode: addressError.code,
     });
   }
 
