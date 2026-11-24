@@ -18,8 +18,9 @@ export async function signUp({ firstName, lastName, email, password }: SignupVal
 }
 
 export async function signIn({ email, password }: LoginValues) {
-  const { error } = await supabase().auth.signInWithPassword({ email, password });
+  const { data, error } = await supabase().auth.signInWithPassword({ email, password });
   if (error) throw new Error(error.message);
+  return data.user;
 }
 
 /** Requires "Allow anonymous sign-ins" in Supabase > Authentication > Sign In / Providers. */

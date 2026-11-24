@@ -13,9 +13,7 @@ export async function getProducts() {
     throw new Error(error.message);
   }
 
-  console.log(data);
-
-  return { data, error };
+  return { products: data ?? [] };
 }
 
 export async function getProduct(id: string) {

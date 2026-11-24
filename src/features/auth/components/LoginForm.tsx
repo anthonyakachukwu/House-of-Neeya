@@ -29,8 +29,10 @@ const LoginForm = () => {
   const onSubmit = async (values: LoginValues) => {
     setFormError("");
     try {
-      await signIn(values);
-      goToStore();
+      const user = await signIn(values);
+      const isAdmin = user?.app_metadata?.role === "admin";
+      router.replace(isAdmin ? "/admin/dashboard" : "/shop");
+      router.refresh();
     } catch (e) {
       setFormError(e instanceof Error ? e.message : "Something went wrong. Try again.");
     }

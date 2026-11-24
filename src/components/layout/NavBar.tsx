@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 import { NavToggleProvider } from "@/providers/NavToggleContext";
 import { FaFacebook, FaInstagram, FaTiktok, FaWhatsapp } from "react-icons/fa6";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import SideMenu from "./SideMenu";
 import { SideMenuProvider } from "@/providers/SideMenuToggleContext";
 import Cart from "@/features/cart/components/Cart";
@@ -32,6 +32,8 @@ import Wishlist from "@/features/wishlist/components/Wishlist";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import Link from "next/link";
+import { signOut } from "@/features/auth/api/auth.services";
+import { useAuthUser } from "@/features/auth/hooks/useAuthUser";
 
 const announcement = [
   "New collection just dropped - shop now 🔥",
@@ -50,12 +52,26 @@ const data = {
 
 const NavBar = () => {
   const pathName = usePathname();
+  const { isAdmin } = useAuthUser();
   const initials = data.user.name
     .split(" ")
     .filter(Boolean)
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase() ?? "")
     .join("") || "A"
+
+  const router = useRouter()
+    
+  const handleSignOut = async () => {
+    try {
+      await signOut()
+
+      router.push("/login");
+      router.refresh();
+    } catch (error) {
+      console.error("Error signing out:", error)
+    }
+  }
 
   return (
     <div className="sticky top-0 inset-x-0 z-10">
@@ -187,10 +203,10 @@ const NavBar = () => {
                     </DropdownMenuGroup>
                     <DropdownMenuSeparator />
                     <DropdownMenuGroup>
-                      <DropdownMenuItem render={<Link href="/admin/dashboard" />}>
+                      <DropdownMenuItem render={<Link href={isAdmin ? "/admin/dashboard" : "/profile"} />}>
                         <User
                         />
-                        My Profile
+                        {isAdmin ? "Dashboard" : "My Profile"}
                       </DropdownMenuItem>
                       <DropdownMenuItem render={<Link href="/admin/orders" />}>
                         <Package
@@ -217,7 +233,7 @@ const NavBar = () => {
                       </DropdownMenuItem>
                     </DropdownMenuGroup>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem render={<Link href="/signup" />}>
+                    <DropdownMenuItem onClick={handleSignOut}>
                       <LogOutIcon
                       />
                       Log out

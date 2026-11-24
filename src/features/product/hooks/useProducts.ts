@@ -13,7 +13,7 @@ export function useProducts() {
     queryKey: productKeys.all,
     queryFn: async () => {
       const { products } = await getProducts();
-      return products.map(mapProductFromDatabase);
+      return (products ?? []).map(mapProductFromDatabase);
     },
     staleTime: 60_000,
   });

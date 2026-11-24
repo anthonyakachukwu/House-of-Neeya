@@ -141,7 +141,7 @@ export default function Page() {
           {
             !isLoading && !error && <AdminTable rowHeaders={rowHeaders}>
               {
-                data?.products.map((product, index) => (
+                (data?.products ?? []).map((product, index) => (
                   <TableRow key={index}>
                     <TableCell><Checkbox label="" /></TableCell>
                     <TableCell>
