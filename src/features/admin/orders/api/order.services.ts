@@ -1,4 +1,5 @@
 import { supabase } from "@/utils/supabase/client";
+import { selectIn } from "@/lib/selectIn";
 import {
   mapOrdersFromDatabase,
   type AddressRow,
@@ -10,42 +11,42 @@ import {
   type ProductNameRow,
 } from "./order.mappers";
 
-// Runs in the browser with the admin's own session. RLS decides what comes
-// back: only admins can read every order and change statuses.
+// Runs in the browser with the signed-in user's own session. RLS decides what
+// comes back: admins see every order, customers only their own.
 
-export async function getAdminOrders(): Promise<AdminOrder[]> {
+async function loadOrders(userId?: string): Promise<AdminOrder[]> {
   const db = supabase();
 
-  const { data: orders, error } = await db
+  let query = db
     .from("Orders")
     .select("*")
     .order("createdAt", { ascending: false });
+  if (userId) query = query.eq("userId", userId);
+
+  const { data: orders, error } = await query;
   if (error) throw new Error(error.message);
   if (!orders || orders.length === 0) return [];
 
-  const orderIds = orders.map((o) => o.id);
-  const addressIds = [...new Set(orders.map((o) => o.addressId))];
-
   const [addresses, items] = await Promise.all([
-    db.from("Addresses").select("*").in("id", addressIds),
-    db.from("Order items").select("*").in("orderId", orderIds),
+    selectIn<AddressRow>("Addresses", "id", orders.map((o) => o.addressId)),
+    selectIn<OrderItemRow>("Order items", "orderId", orders.map((o) => o.id)),
   ]);
-  if (addresses.error) throw new Error(addresses.error.message);
-  if (items.error) throw new Error(items.error.message);
 
-  const productIds = [...new Set((items.data ?? []).map((i) => i.productId))];
-  const products = productIds.length
-    ? await db.from("Products").select("id, name").in("id", productIds)
-    : { data: [], error: null };
-  if (products.error) throw new Error(products.error.message);
-
-  return mapOrdersFromDatabase(
-    orders as OrderRow[],
-    (addresses.data ?? []) as AddressRow[],
-    (items.data ?? []) as OrderItemRow[],
-    (products.data ?? []) as ProductNameRow[],
+  const products = await selectIn<ProductNameRow>(
+    "Products",
+    "id",
+    items.map((i) => i.productId),
+    "id, name",
   );
+
+  return mapOrdersFromDatabase(orders as OrderRow[], addresses, items, products);
 }
+
+/** Every order. Only returns rows for admin accounts. */
+export const getAdminOrders = () => loadOrders();
+
+/** One customer's orders. */
+export const getMyOrders = (userId: string) => loadOrders(userId);
 
 export async function updateOrder(
   id: string,

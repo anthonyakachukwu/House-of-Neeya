@@ -1,11 +1,5 @@
-import SectionLayout from "@/components/layout/SectionLayout";
+import ProfileView from "@/features/profile/components/ProfileView";
 
-export default function Home() {
-  return (
-    <>
-      <SectionLayout>
-        <p>Hero</p>
-      </SectionLayout>
-    </>
-  );
+export default function ProfilePage() {
+  return <ProfileView />;
 }

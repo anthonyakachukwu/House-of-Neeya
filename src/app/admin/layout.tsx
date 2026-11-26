@@ -18,19 +18,13 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { AnnouncementBanner } from "@/components"
 import { ProductFormProvider } from "@/features/admin/products/provider/ProductFormToggleContext"
-
-const data = {
-  user: {
-    name: "Jane Mathews",
-    email: "janematthew@hotmail.com",
-    avatar: "/avatars/shadcn.jpg",
-  }
-}
+import { useAuthUser } from "@/features/auth/hooks/useAuthUser"
 
 const AdminLayout = ({ children }: { children: ReactNode }) => {
   const pathName = usePathname();
   const path = pathName.split("/").at(-1)
-  const initials = data.user.name
+  const { profile } = useAuthUser()
+  const initials = profile?.displayName
     .split(" ")
     .filter(Boolean)
     .slice(0, 2)
@@ -72,7 +66,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
                   </Avatar>
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight tracking-widest">
-                  <span className="truncate font-medium text-base font-serif">{data.user.name}</span>
+                  <span className="truncate font-medium text-base font-serif">{profile?.displayName}</span>
                   <span className="truncate text-[10px] font-light">Admin</span>
                 </div>
               </div>

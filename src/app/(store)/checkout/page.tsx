@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import SectionLayout from "@/components/layout/SectionLayout";
 import { useCartStore } from "@/features/cart/store/cartStore";
 import CheckoutForm from "@/features/checkout/components/CheckoutForm";
@@ -9,8 +9,11 @@ import OrderPlaced, {
 } from "@/features/checkout/components/OrderPlaced";
 import OrderSummary from "@/features/checkout/components/OrderSummary";
 import type { CheckoutFormValues } from "@/features/checkout/schema/checkout.schema";
+import { useAuthUser } from "@/features/auth/hooks/useAuthUser";
+import { DELIVERY_STATE_NAMES, type DeliveryState } from "@/features/checkout/lib/checkout.constants";
 
 export default function Checkout() {
+  const { profile } = useAuthUser();
   const { items, getTotal, clearCart } = useCartStore();
   const total = getTotal();
 
@@ -18,6 +21,17 @@ export default function Checkout() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [placed, setPlaced] = useState<PlacedOrder | null>(null);
+
+  //Handle prefill
+  const prefill = useMemo(() => {
+    if (!profile || profile.isGuest) return undefined;
+    const state = (DELIVERY_STATE_NAMES as readonly string[]).includes(profile.address.state)
+      ? (profile.address.state as DeliveryState) : undefined;
+    return {
+      firstName: profile.firstName, lastName: profile.lastName, email: profile.email,
+      phone: profile.phone, street: profile.address.street, city: profile.address.city, state,
+    };
+  }, [profile]);
 
   const handleSubmit = async (values: CheckoutFormValues) => {
     if (items.length === 0) {
@@ -92,6 +106,7 @@ export default function Checkout() {
         submitting={submitting}
         disabled={items.length === 0}
         error={error}
+        prefill={prefill}
       />
       <OrderSummary
         checkoutItems={items}

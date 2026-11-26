@@ -9,6 +9,7 @@ import SummaryTable from "@/features/admin/components/SummaryTable";
 import { ArrowRight, ClipboardCheck, PackageCheck, ShoppingBag, Trophy } from "lucide-react";
 import { useRouter } from "next/navigation";
 import StatCards from "@/features/admin/components/StatCards";
+import { useAuthUser } from "@/features/auth/hooks/useAuthUser";
 
 type MonthToStringMap = {
   [key: number]: string;
@@ -30,6 +31,7 @@ const monthtoStringMap: MonthToStringMap = {
 }
 
 export default function Page() {
+  const { profile } = useAuthUser()
   const date = new Date()
   const month = monthtoStringMap[date.getMonth() + 1]
   const day = date.getDate()
@@ -62,7 +64,7 @@ export default function Page() {
       <AdminPageHeader>
         <AdminPageHeader.Content>
           <AdminPageHeader.Meta>Today • {month} {day}, {year}</AdminPageHeader.Meta>
-          <AdminPageHeader.Title>Good {timeOfDay}, James</AdminPageHeader.Title>
+          <AdminPageHeader.Title>Good {timeOfDay} {profile ? ` ${profile?.shortName}` : ""}</AdminPageHeader.Title>
           <AdminPageHeader.Description>
             Here&apos;s what&apos;s happening at House of Neeya right now.
           </AdminPageHeader.Description>

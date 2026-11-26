@@ -5,7 +5,8 @@ import { updateSession } from "@/utils/supabase/middleware";
 // This is the first gate only. The real protection is RLS in Supabase.
 
 const AUTH_PAGES = ["/login", "/signup"];
-const SIGNED_IN_ONLY = ["/profile"];
+// Customer pages: need a session, and admins use /admin instead.
+const CUSTOMER_ONLY = ["/profile", "/orders"];
 
 const isUnder = (pathname: string, base: string) =>
   pathname === base || pathname.startsWith(`${base}/`);
@@ -32,8 +33,9 @@ export async function proxy(request: NextRequest) {
     if (!isAdmin) return redirectTo("/");
   }
 
-  if (SIGNED_IN_ONLY.some((base) => isUnder(pathname, base)) && !signedIn) {
-    return redirectTo("/login", pathname);
+  if (CUSTOMER_ONLY.some((base) => isUnder(pathname, base))) {
+    if (!signedIn) return redirectTo("/login", pathname);
+    if (isAdmin) return redirectTo("/admin/dashboard");
   }
 
   if (AUTH_PAGES.includes(pathname) && signedIn) {

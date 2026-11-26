@@ -31,7 +31,10 @@ const LoginForm = () => {
     try {
       const user = await signIn(values);
       const isAdmin = user?.app_metadata?.role === "admin";
-      router.replace(isAdmin ? "/admin/dashboard" : "/shop");
+      const params = new URLSearchParams(window.location.search);
+      const nextParam = params.get("next");
+      const next = nextParam && nextParam.startsWith("/") && !nextParam.startsWith("//") ? nextParam : null;
+      router.replace(next ?? (isAdmin ? "/admin/dashboard" : "/shop"));
       router.refresh();
     } catch (e) {
       setFormError(e instanceof Error ? e.message : "Something went wrong. Try again.");

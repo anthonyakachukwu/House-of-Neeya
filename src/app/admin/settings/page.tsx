@@ -4,6 +4,7 @@ import Input from "@/components/ui/Input";
 import Textarea from "@/components/ui/TextArea";
 import AdminPageContent from "@/features/admin/components/AdminPageContent";
 import AdminPageHeader from "@/features/admin/components/AdminPageHeader";
+import CurrentAdminRow from "@/features/admin/components/CurrentAdminRow";
 import SettingSubsection from "@/features/admin/components/SettingSubsection";
 import formatCurrency from "@/lib/formatCurrency";
 import { Edit, Plus, X } from "lucide-react";
@@ -178,32 +179,7 @@ export default function Page() {
             <SettingSubsection.Title>Admin Users</SettingSubsection.Title>
             <SettingSubsection.Description>People with access to this dashboard.</SettingSubsection.Description>
           </SettingSubsection.Heading>
-          <div className="flex items-center gap-2 py-2 min-w-fit">
-            <div className="flex aspect-square size-8 items-center justify-center rounded-lg text-sidebar-primary-foreground">
-              <Avatar>
-                <AvatarImage src="/avatar" alt="Jane Matthews" />
-                <AvatarFallback className="bg-accent text-background">AA</AvatarFallback>
-              </Avatar>
-            </div>
-            <div className="grid flex-1 text-left text-sm leading-tight tracking-widest">
-              <span className="truncate font-medium text-base font-serif">Anthonia Akachukwu</span>
-              <span className="truncate text-[10px] font-light">anthoniaakachukwu05@gmail.com</span>
-            </div>
-            <span className="bg-accent/10 text-accent px-2 py-1 rounded-full text-[10px] uppercase">Owner</span>
-          </div>
-          <div className="flex items-center gap-2 py-2 min-w-fit">
-            <div className="flex aspect-square size-8 items-center justify-center rounded-lg text-sidebar-primary-foreground">
-              <Avatar>
-                <AvatarImage src="/avatar" alt="Jane Matthews" />
-                <AvatarFallback className="bg-accent text-background">JN</AvatarFallback>
-              </Avatar>
-            </div>
-            <div className="grid flex-1 text-left text-sm leading-tight tracking-widest">
-              <span className="truncate font-medium text-base font-serif">Jane Matthews</span>
-              <span className="truncate text-[10px] font-light">janematthews@gmail.com</span>
-            </div>
-            <span className="bg-accent/10 text-accent px-2 py-1 rounded-full text-[10px] uppercase">Admin</span>
-          </div>
+          <CurrentAdminRow />
           <Button variant="link" className="font-bold w-fit"><Plus />Invite Admin</Button>
         </SettingSubsection>
       </AdminPageContent>

@@ -14,6 +14,7 @@ import {
   checkoutFormSchema,
   type CheckoutFormValues,
 } from "../schema/checkout.schema";
+import { useEffect } from "react";
 
 type CheckoutFormProps = {
   onStateChange: (state: string, fee: number) => void;
@@ -21,6 +22,7 @@ type CheckoutFormProps = {
   submitting: boolean;
   disabled?: boolean;
   error?: string;
+  prefill?: Partial<CheckoutFormValues>
 };
 
 const SectionTitle = ({ children }: { children: React.ReactNode }) => (
@@ -35,10 +37,13 @@ const CheckoutForm = ({
   submitting,
   disabled,
   error,
+  prefill,
 }: CheckoutFormProps) => {
   const {
     register,
     handleSubmit,
+    getValues,
+    setValue,
     formState: { errors },
   } = useForm<CheckoutFormValues>({
     resolver: zodResolver(checkoutFormSchema),
@@ -50,6 +55,18 @@ const CheckoutForm = ({
       onStateChange(state, DELIVERY_FEES[state] ?? 0);
     },
   });
+
+  useEffect(() => {
+    if (!prefill) return;
+    (Object.keys(prefill) as (keyof CheckoutFormValues)[]).forEach((key) => {
+      const value = prefill[key];
+      if (value && !getValues(key)) setValue(key, value as never);
+    });
+    if (prefill.state && DELIVERY_STATE_NAMES.includes(prefill.state)) {
+      onStateChange(prefill.state, DELIVERY_FEES[prefill.state]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prefill]);
 
   return (
     <form

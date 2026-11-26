@@ -11,7 +11,6 @@ import {
   MenuIcon,
   X,
   ShoppingCart,
-  BellIcon,
   LogOutIcon,
   House,
   ShoppingBag,
@@ -21,6 +20,7 @@ import {
   Package,
   CircleHelp,
   Settings,
+  LayoutDashboard,
 } from "lucide-react";
 import { NavToggleProvider } from "@/providers/NavToggleContext";
 import { FaFacebook, FaInstagram, FaTiktok, FaWhatsapp } from "react-icons/fa6";
@@ -30,7 +30,7 @@ import { SideMenuProvider } from "@/providers/SideMenuToggleContext";
 import Cart from "@/features/cart/components/Cart";
 import Wishlist from "@/features/wishlist/components/Wishlist";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "../ui/dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { Avatar, AvatarFallback } from "../ui/avatar";
 import Link from "next/link";
 import { signOut } from "@/features/auth/api/auth.services";
 import { useAuthUser } from "@/features/auth/hooks/useAuthUser";
@@ -42,26 +42,12 @@ const announcement = [
   "Pay securely with card or bank transfer 💳",
 ];
 
-const data = {
-  user: {
-    name: "Jane Mathews",
-    email: "janematthew@hotmail.com",
-    avatar: "/avatars/shadcn.jpg",    
-  }
-}
-
 const NavBar = () => {
   const pathName = usePathname();
-  const { isAdmin } = useAuthUser();
-  const initials = data.user.name
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? "")
-    .join("") || "A"
+  const { isAdmin, profile } = useAuthUser();
 
   const router = useRouter()
-    
+
   const handleSignOut = async () => {
     try {
       await signOut()
@@ -183,61 +169,52 @@ const NavBar = () => {
                   <Heart width={18} strokeWidth={1.5} />
                 </SideMenu.OpenSideMenu>
                 <DropdownMenu>
-                  <DropdownMenuTrigger render={
-                    <button><CircleUser width={18} strokeWidth={1.5} /></button>
-                  } />
+                  <DropdownMenuTrigger
+                    render={<button aria-label="Account"><CircleUser width={18} strokeWidth={1.5} /></button>}
+                  />
                   <DropdownMenuContent>
-                    <DropdownMenuGroup>
-                      <DropdownMenuLabel className="p-0 font-normal">
-                        <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                          <Avatar>
-                            <AvatarImage src={data.user.avatar} alt={data.user.name} />
-                            <AvatarFallback>{initials}</AvatarFallback>
-                          </Avatar>
-                          <div className="grid flex-1 text-left text-sm leading-tight">
-                            <span className="truncate font-medium capitalize">{data.user.name}</span>
-                            <span className="truncate text-xs lowercase">{data.user.email}</span>
-                          </div>
-                        </div>
-                      </DropdownMenuLabel>
-                    </DropdownMenuGroup>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuGroup>
-                      <DropdownMenuItem render={<Link href={isAdmin ? "/admin/dashboard" : "/profile"} />}>
-                        <User
-                        />
-                        {isAdmin ? "Dashboard" : "My Profile"}
-                      </DropdownMenuItem>
-                      <DropdownMenuItem render={<Link href="/admin/orders" />}>
-                        <Package
-                        />
-                        My Orders
-                      </DropdownMenuItem>
-                    </DropdownMenuGroup>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuGroup>
-                      <DropdownMenuItem render={<Link href="/admin/settings" />}>
-                        <Settings
-                        />
-                        Settings
-                      </DropdownMenuItem>
-                      <DropdownMenuItem render={<Link href="/help" />}>
-                        <CircleHelp
-                        />
-                        Help & Support
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        <BellIcon
-                        />
-                        Notifications
-                      </DropdownMenuItem>
-                    </DropdownMenuGroup>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleSignOut}>
-                      <LogOutIcon
-                      />
-                      Log out
-                    </DropdownMenuItem>
+                    {profile ? (
+                      <>
+                        <DropdownMenuGroup>
+                          <DropdownMenuLabel className="p-0 font-normal">
+                            <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+                              <Avatar>
+                                <AvatarFallback>{profile.initials}</AvatarFallback>
+                              </Avatar>
+                              <div className="grid flex-1 text-left text-sm leading-tight">
+                                <span className="truncate font-medium capitalize">{profile.displayName}</span>
+                                {!profile.isGuest && (
+                                  <span className="truncate text-xs lowercase">{profile.email}</span>
+                                )}
+                              </div>
+                            </div>
+                          </DropdownMenuLabel>
+                        </DropdownMenuGroup>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuGroup>
+                          {isAdmin ? (
+                            <>
+                              <DropdownMenuItem render={<Link href="/admin/dashboard" />}><LayoutDashboard />Dashboard</DropdownMenuItem>
+                              <DropdownMenuItem render={<Link href="/admin/orders" />}><Package />Orders</DropdownMenuItem>
+                              <DropdownMenuItem render={<Link href="/admin/settings" />}><Settings />Settings</DropdownMenuItem>
+                            </>
+                          ) : (
+                            <>
+                              <DropdownMenuItem render={<Link href="/profile" />}><User />My Profile</DropdownMenuItem>
+                              <DropdownMenuItem render={<Link href="/orders" />}><Package />My Orders</DropdownMenuItem>
+                            </>
+                          )}
+                        </DropdownMenuGroup>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem render={<Link href="/contact" />}><CircleHelp />Help & Support</DropdownMenuItem>
+                        <DropdownMenuItem onClick={handleSignOut}><LogOutIcon />Log out</DropdownMenuItem>
+                      </>
+                    ) : (
+                      <>
+                        <DropdownMenuItem render={<Link href="/login" />}><User />Sign in</DropdownMenuItem>
+                        <DropdownMenuItem render={<Link href="/signup" />}><CircleUser />Create account</DropdownMenuItem>
+                      </>
+                    )}
                   </DropdownMenuContent>
                 </DropdownMenu>
               </Nav.Actions>
