@@ -1,5 +1,4 @@
 import { Button } from "@/components";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Input from "@/components/ui/Input";
 import Textarea from "@/components/ui/TextArea";
 import AdminPageContent from "@/features/admin/components/AdminPageContent";

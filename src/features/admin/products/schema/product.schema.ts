@@ -40,16 +40,14 @@ export const productSchema = z.object({
     alt: z.string().min(2, "Image alt text is required"),
   }),
 
-  variants: z
-    .array(
-      z.object({
-        id: z.string(),
-        color: z.string().optional(),
-        size: z.string().optional(),
-        stock: z.number().int().nonnegative("Stock cannot be negative"),
-      }),
-    )
-    .optional(),
+  variants: z.array(
+    z.object({
+      id: z.string(),
+      color: z.string().optional(),
+      size: z.string().optional(),
+      stock: z.number().int().nonnegative("Stock cannot be negative"),
+    }),
+  ),
 
   tags: z.array(z.enum(["New", "Featured", "Sales", "Best-Seller"])).optional(),
 

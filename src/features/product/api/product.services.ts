@@ -1,6 +1,5 @@
 import { supabase } from "@/utils/supabase/client";
 // import { products } from "../data/products";
-import { ProductDraft } from "@/features/admin/products/types/product.types";
 import { ProductFormValues } from "@/features/admin/products/schema/product.schema";
 import { mapProductFormToDatabase } from "./product.mappers";
 
@@ -20,13 +19,12 @@ export async function getProduct(id: string) {
   const { data, error } = await supabase()
     .from("Products")
     .select("*")
-    .eq("id", id);
+    .eq("id", id)
+    .single();
 
   if (error) {
     throw Error(error.message);
   }
-
-  console.log(data);
 
   return data;
 }
@@ -47,7 +45,9 @@ export async function createProduct(data: ProductFormValues) {
   return createdProduct;
 }
 
-export async function updateProduct(id: string, product: ProductDraft) {
+export async function updateProduct(id: string, formData: ProductFormValues) {
+  const product = mapProductFormToDatabase(formData);
+
   const { data, error } = await supabase()
     .from("Products")
     .update(product)

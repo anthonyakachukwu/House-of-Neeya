@@ -16,7 +16,7 @@ const StatCards = () => {
           <StatCard>
             <StatCard.Label>Revenue Today</StatCard.Label>
             <StatCard.Value>{formatCurrency(revenueData?.revenue || 0)}</StatCard.Value>
-            <StatCard.Progress><ArrowUp size={12} />{revenueData?.changePct || 0}% vs Yesterday</StatCard.Progress>
+            <StatCard.Progress><ArrowUp size={12} />{revenueData?.changePct?.toFixed(0) || 0}% vs Yesterday</StatCard.Progress>
           </StatCard>
           <StatCard>
             <StatCard.Label>Orders Today</StatCard.Label>

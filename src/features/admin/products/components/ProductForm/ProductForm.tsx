@@ -31,7 +31,6 @@ const ProductForm = () => {
 
   const { reset } = form;
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [loadError, setLoadError] = useState("");
 
   const onInvalid = (errors: FieldErrors<ProductFormValues>) => {
     console.log("FORM ERRORS:", errors);
@@ -76,7 +75,9 @@ const ProductForm = () => {
           isFeatured: p.isFeatured, isNewArrival: p.isNewArrival,
         });
       } catch (e) {
-        if (!cancelled) setLoadError(e instanceof Error ? e.message : "Failed to load product");
+        if (!cancelled) {
+          console.error("Failed to load product:", e);
+        }
       }
     })();
 
