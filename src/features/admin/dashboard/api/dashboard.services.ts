@@ -21,6 +21,27 @@ export type DailyOrders = {
   yesterday: DailyOrderRow[];
 };
 
+export type LowStockProduct = {
+  id: string;
+  name: string;
+  sku: string;
+  stock: number;
+  image: { src: string; alt?: string } | null;
+};
+
+/** Lowest stock first, including sold-out products. */
+export async function fetchLowStockProducts(limit = 5): Promise<LowStockProduct[]> {
+  const { data, error } = await supabase()
+    .from("Products")
+    .select("id, name, sku, stock, image")
+    .lte("stock", LOW_STOCK_THRESHOLD)
+    .order("stock", { ascending: true })
+    .limit(limit);
+
+  if (error) throw error;
+  return (data ?? []) as LowStockProduct[];
+}
+
 /** Orders from the start of yesterday onward, split into today and yesterday. */
 export async function fetchDailyOrders(): Promise<DailyOrders> {
   const { todayStart, yesterdayStart } = getDayRangesWAT();

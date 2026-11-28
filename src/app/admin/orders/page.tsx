@@ -2,10 +2,10 @@
 
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Search } from "lucide-react";
 import { Button } from "@/components";
 import ErrorState from "@/components/ui/ErrorState";
-import Input from "@/components/ui/Input";
+import AdminSearch from "@/features/admin/components/AdminSearch";
+import { orderMatches } from "@/features/admin/orders/lib/orderSearch";
 import Loader from "@/components/ui/Loader";
 import AdminPageContent from "@/features/admin/components/AdminPageContent";
 import AdminPageHeader from "@/features/admin/components/AdminPageHeader";
@@ -76,7 +76,10 @@ export default function Page() {
     orders.filter(tabs["Pending Payment"]).length +
     orders.filter(tabs.Unfulfilled).length;
 
-  const visible = filtered.slice(0, shown);
+  const visible = useMemo(
+    () => orders.filter((o) => tabs[tab](o) && orderMatches(o, search)),
+    [orders, tab, search],
+  );
 
   return (
     <>
@@ -90,45 +93,26 @@ export default function Page() {
         </AdminPageHeader.Content>
       </AdminPageHeader>
       <AdminPageContent>
-        <div className="flex flex-col lg:flex-row justify-between gap-4">
-          <div className="flex overflow-x-auto">
-            <AdminTableTabs>
-              {(Object.keys(tabs) as TabName[]).map((name) => (
-                <button
-                  key={name}
-                  type="button"
-                  aria-pressed={name === tab}
-                  className="text-left whitespace-nowrap"
-                  onClick={() => {
-                    setTab(name);
-                    setShown(PAGE_SIZE);
-                  }}
-                >
-                  <Tab active={name === tab}>
-                    {name} ({orders.filter(tabs[name]).length})
-                  </Tab>
-                </button>
-              ))}
-            </AdminTableTabs>
-          </div>
-          <div className="relative w-full lg:w-65">
-            <Search
-              size={14}
-              className="absolute -translate-y-1/2 top-1/2 left-2.5"
-            />
-            <Input
-              type="search"
-              aria-label="Search orders"
-              placeholder="Ref. no, name, phone or email"
-              className="pl-8.5"
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setShown(PAGE_SIZE);
-              }}
-            />
-          </div>
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <AdminTableTabs>
+            {(Object.keys(tabs) as TabName[]).map((name) => (
+              <Tab key={name} active={name === tab} onClick={() => setTab(name)}>
+                {name} ({orders.filter(tabs[name]).length})
+              </Tab>
+            ))}
+          </AdminTableTabs>
+          <AdminSearch
+            label="Search orders"
+            placeholder="Search reference, name, phone, item..."
+            value={search}
+            onChange={setSearch}
+          />
         </div>
+        {!isLoading && !error && (
+          <p className="text-xs text-foreground/60" aria-live="polite">
+            Showing {visible.length} of {orders.length} orders
+          </p>
+        )}
 
         {mutation.error && (
           <p role="alert" className="text-sm text-destructive">
@@ -141,7 +125,7 @@ export default function Page() {
           {isLoading && <Loader />}
           {!isLoading && !error && filtered.length === 0 && (
             <p className="py-16 text-center text-sm text-foreground/60">
-              No orders in this view.
+              {search.trim() ? `No orders match "${search.trim()}".` : "No orders in this view."}
             </p>
           )}
           {!isLoading && !error && filtered.length > 0 && (

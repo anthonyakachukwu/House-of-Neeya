@@ -5,11 +5,15 @@ import AdminPageContent from "@/features/admin/components/AdminPageContent";
 import AdminPageHeader from "@/features/admin/components/AdminPageHeader";
 import ProductForm from "@/features/admin/products/components/ProductForm/ProductForm";
 import ProductFormModal from "@/features/admin/products/components/ProductForm/ProductFormModal";
-import SummaryTable from "@/features/admin/components/SummaryTable";
-import { ArrowRight, ClipboardCheck, PackageCheck, ShoppingBag, Trophy } from "lucide-react";
 import { useRouter } from "next/navigation";
 import StatCards from "@/features/admin/components/StatCards";
 import { useAuthUser } from "@/features/auth/hooks/useAuthUser";
+import {
+  LowStockPanel,
+  NeedsAttentionPanel,
+  RecentOrdersPanel,
+  TopProductsPanel,
+} from "@/features/admin/dashboard/components/DashboardPanels";
 
 type MonthToStringMap = {
   [key: number]: string;
@@ -79,61 +83,13 @@ export default function Page() {
           <ProductForm />
         </ProductFormModal>
         <StatCards />
-        <div className="flex flex-col md:flex-row gap-4 w-full">
-          <SummaryTable className="flex-6">
-            <SummaryTable.Header>
-              <SummaryTable.Title>Need your attention</SummaryTable.Title>
-              <SummaryTable.Action href="/admin/orders">View all orders <ArrowRight /></SummaryTable.Action>
-            </SummaryTable.Header>
-            <SummaryTable.Content>
-              <SummaryTable.Empty>
-                <ClipboardCheck />
-                <p className="font-bold">No orders need attention</p>
-                <p className="normal-case">You&apos;re all caught up!</p>
-              </SummaryTable.Empty>
-            </SummaryTable.Content>
-          </SummaryTable>
-          <SummaryTable className="flex-4">
-            <SummaryTable.Header>
-              <SummaryTable.Title>Low stock</SummaryTable.Title>
-              <SummaryTable.Action href="/admin/products">Manage products <ArrowRight /></SummaryTable.Action>
-            </SummaryTable.Header>
-            <SummaryTable.Content>
-              <SummaryTable.Empty>
-                <PackageCheck />
-                <p className="font-bold">No low stock items</p>
-                <p className="normal-case">All products are sufficiently stocked!</p>
-              </SummaryTable.Empty>
-            </SummaryTable.Content>
-          </SummaryTable>
+        <div className="flex w-full flex-col gap-4 md:flex-row">
+          <NeedsAttentionPanel />
+          <LowStockPanel />
         </div>
-        <div className="flex flex-col md:flex-row gap-4 w-full">
-          <SummaryTable className="flex-6">
-            <SummaryTable.Header>
-              <SummaryTable.Title>Recent Orders</SummaryTable.Title>
-              <SummaryTable.Action href="/admin/orders">View all <ArrowRight /></SummaryTable.Action>
-            </SummaryTable.Header>
-            <SummaryTable.Content>
-              <SummaryTable.Empty>
-                <ShoppingBag />
-                <p className="font-bold">No recent orders</p>
-                <p className="normal-case">New orders will appear here when customers places them</p>
-              </SummaryTable.Empty>
-            </SummaryTable.Content>
-          </SummaryTable>
-          <SummaryTable className="flex-4">
-            <SummaryTable.Header>
-              <SummaryTable.Title>Top Products</SummaryTable.Title>
-              <SummaryTable.Action href="/admin/products">View analytics <ArrowRight /></SummaryTable.Action>
-            </SummaryTable.Header>
-            <SummaryTable.Content>
-              <SummaryTable.Empty>
-                <Trophy />
-                <p className="font-bold">No top product yet</p>
-                <p className="normal-case">Start selling more to get featured!</p>
-              </SummaryTable.Empty>
-            </SummaryTable.Content>
-          </SummaryTable>
+        <div className="flex w-full flex-col gap-4 md:flex-row">
+          <RecentOrdersPanel />
+          <TopProductsPanel />
         </div>
       </AdminPageContent>
     </>
